@@ -336,13 +336,14 @@ class MFFLNet(BaseModule):
             # pretrain
             clip_pretrained: bool = True,
             pretrained: Optional[str] = None,
+            freeze_backbone=False,
             init_cfg: Optional[Union[Dict, List[Dict]]] = [
                 dict(type='TruncNormal', layer='Linear', std=0.02, bias=0.),
                 dict(type='Constant', layer='LayerNorm', val=1., bias=0.)
             ]
     ) -> None:
         super().__init__(init_cfg=init_cfg)
-
+        self.freeze_backbone=freeze_backbone
         self.pretrained = pretrained
         self.clip_pretrained = clip_pretrained
         self.input_resolution = input_resolution
@@ -377,6 +378,17 @@ class MFFLNet(BaseModule):
             no_mffl=no_mffl,
             n_dim=n_dim,
         )
+        self._freeze()
+        # ==========新增train重载函数，实现参数冻结逻辑==========
+    def _freeze(self):
+        if self.freeze_backbone:
+            for name, param in self.named_parameters():
+                # 只允许 mffl 模块参与训练；其余主干参数全部冻结
+                if "mffl" not in name.lower():
+                    param.requires_grad = False
+                else:
+                    param.requires_grad = True
+    # =====================================================
 
     def _inflate_weight(self,
                         weight_2d: torch.Tensor,
