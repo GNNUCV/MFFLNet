@@ -379,7 +379,7 @@ class MFFLNet(BaseModule):
             n_dim=n_dim,
         )
         self._freeze()
-        # ==========新增train重载函数，实现参数冻结逻辑==========
+        # ==========实现参数冻结逻辑==========
     def _freeze(self):
         if self.freeze_backbone:
             for name, param in self.named_parameters():
